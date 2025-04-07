@@ -192,7 +192,7 @@ pub trait DIDApi: Call {
     /// # Return value
     /// Returns detailed user information, including user ID, nickname, avatar, etc.
     async fn get_token_user_profile(&self) -> Result<CommonResp<UserTokenProfile>> {
-        self.call(
+        self.call::<String, UserTokenProfile>(
             CallMethod::Post,
             format!("{}/getTokenUserProfile", Self::BASE_PATH),
             None,
