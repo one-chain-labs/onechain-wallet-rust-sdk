@@ -1,0 +1,30 @@
+[package]
+name = "onechain-wallet-rust-sdk"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+serde = { version = "1.0.219", features = ["derive", "rc"] }
+serde_json = { version = "1.0.140" }
+async-trait = "0.1.87"
+reqwest = { version = "0.12", features = ["json", "multipart", "stream"] }
+reqwest-middleware = { version = "0.4", features = ["json", "multipart"] }
+reqwest-tracing = "0.5"
+reqwest-retry = "0.7"
+anyhow = "1.0.97"
+bcs = "0.1.6"
+
+rand = "0.8"
+base64 = "0.22"
+rsa = { version = "0.9", features = ["serde", "sha2"] }
+signature = { version = "2.2", features = ["alloc"] }
+
+sui_types = { git = "https://github.com/one-chain-labs/onechain.git", package = "sui-types" }
+num-bigint = "0.4.4"
+fastcrypto = { git = "https://github.com/one-chain-labs/fastcrypto", rev = "d18b5f836c641ea19fb156670c365c6652b07194" }
+fastcrypto-zkp = { git = "https://github.com/one-chain-labs/fastcrypto", rev = "d18b5f836c641ea19fb156670c365c6652b07194", package = "fastcrypto-zkp" }
+shared_crypto = { git = "https://github.com/one-chain-labs/onechain.git", package = "shared-crypto" }
+
+[dev-dependencies]
+tokio = { version = "1.44.1", features = ["full"] }
+sui_sdk = { git = "https://github.com/one-chain-labs/onechain.git", package = "sui-sdk" }
