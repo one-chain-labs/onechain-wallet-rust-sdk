@@ -104,12 +104,12 @@ async fn get_jwt_token(
 ### 4.Get ZK Proof {/* {#get_zk_proof} */}
 
 ```rust
-use fastcrypto_zkp::bn254::zk_login::ZkLoginInputsReader;
+use onechain_wallet_rust_sdk::fastcrypto_zkp::bn254::zk_login::ZkLoginInputsReader;
 use num_bigint::BigUint;
 use onechain_wallet_rust_sdk::client::OneChainWalletService;
 use onechain_wallet_rust_sdk::rpc::DIDApi;
 use onechain_wallet_rust_sdk::types::did::{AuthorizeTokenProfileResp, ZkProofsReq};
-use sui_types::crypto::SuiKeyPair;
+use onechain_wallet_rust_sdk::sui_types::crypto::SuiKeyPair;
 
 async fn get_zk_proof(
     service: &OneChainWalletService,
@@ -191,13 +191,13 @@ async fn create_tx(
 ### 2.Sign Tx & Send Tx {/* {#sign_and_send_tx} */}
 
 ```rust
-use fastcrypto_zkp::bn254::zk_login::ZkLoginInputs;
+use onechain_wallet_rust_sdk::fastcrypto_zkp::bn254::zk_login::ZkLoginInputs;
 use onechain_wallet_rust_sdk::client::OneChainWalletService;
 use onechain_wallet_rust_sdk::rpc::TransferApi;
 use onechain_wallet_rust_sdk::types::common::CreateOrderResp;
 use onechain_wallet_rust_sdk::types::transfer::{TransferOrderTxReq, TransferOrderTxResponse};
 use onechain_wallet_rust_sdk::utils::zk_login::zklogin_sign_tx_bytes;
-use sui_types::crypto::SuiKeyPair;
+use onechain_wallet_rust_sdk::sui_types::crypto::SuiKeyPair;
 
 async fn send_tx(
     service: &OneChainWalletService,
@@ -229,12 +229,12 @@ async fn send_tx(
 ### 1.Build Sponsor Ptb Tx Base64 {/* {#build_sponsor_ptb_tx_base64} */}
 
 ```rust
-use fastcrypto::encoding::{Base64, Encoding};
+use onechain_wallet_rust_sdk::fastcrypto::encoding::{Base64, Encoding};
 use sui_sdk::SuiClient;
 use sui_sdk::rpc_types::SuiObjectDataOptions;
-use sui_types::base_types::SuiAddress;
-use sui_types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-use sui_types::transaction::TransactionData;
+use onechain_wallet_rust_sdk::sui_types::base_types::SuiAddress;
+use onechain_wallet_rust_sdk::sui_types::programmable_transaction_builder::ProgrammableTransactionBuilder;
+use onechain_wallet_rust_sdk::sui_types::transaction::TransactionData;
 
 async fn build_ptb_tx_base64(sui_client: &SuiClient, from: SuiAddress) -> anyhow::Result<String> {
     let coins = sui_client
@@ -287,14 +287,14 @@ async fn create_sponsor_tx(
 ### 3.Sign Tx && Send Tx {/* {#sign_sponsor_tx_and_send_tx} */}
 
 ```rust
-use fastcrypto_zkp::bn254::zk_login::ZkLoginInputs;
+use onechain_wallet_rust_sdk::fastcrypto_zkp::bn254::zk_login::ZkLoginInputs;
 use onechain_wallet_rust_sdk::client::OneChainWalletService;
 use onechain_wallet_rust_sdk::rpc::TransferApi;
 use onechain_wallet_rust_sdk::types::transfer::{
     GasTxBuilderResponse, ProxyPayTxReq, ProxyPayTxResp,
 };
 use onechain_wallet_rust_sdk::utils::zk_login::zklogin_sign_tx_bytes;
-use sui_types::crypto::SuiKeyPair;
+use onechain_wallet_rust_sdk::sui_types::crypto::SuiKeyPair;
 
 async fn sign_sponsor_tx_and_send_tx(
     service: &OneChainWalletService,
