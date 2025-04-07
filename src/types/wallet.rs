@@ -25,7 +25,7 @@ pub struct CurrencyInfo {
     pub name: String,
 
     /// Currency icon
-    pub pic: String,
+    pub pic: Option<String>,
 
     /// USD exchange rate
     pub exchange_rate: String,

@@ -184,15 +184,20 @@ async fn sponsor_test() {
         .await
         .unwrap();
 
+    let coins = sui_client
+        .coin_read_api()
+        .get_coins(
+            wallet.info.address,
+            Some("0x2::oct::OCT".to_string()),
+            None,
+            None,
+        )
+        .await
+        .unwrap();
+
     let object = sui_client
         .read_api()
-        .get_object_with_options(
-            ObjectID::from_str(
-                "0x3e2f98fe42086f4d6fb41ef0b9d2f6006195c9c3a6e334b6343ba48f55377043",
-            )
-            .unwrap(),
-            SuiObjectDataOptions::new(),
-        )
+        .get_object_with_options(coins.data[0].coin_object_id, SuiObjectDataOptions::new())
         .await
         .unwrap()
         .data

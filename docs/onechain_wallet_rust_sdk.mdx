@@ -3,8 +3,7 @@
 OneChain Wallet Rust SDK is a Rust client SDK for interacting with the OneChain Wallet service.It provides a series of
 API interfaces for implementing identity authentication, payment transactions,financial services and other functions.
 
-
-## Getting started
+## Getting started {/* {#getting-started} */}
 
 ```toml
 tokio = { version = "1", features = ["full"] }
@@ -14,6 +13,311 @@ anyhow = "1.0.97"
 num-bigint = "0.4.4"
 ```
 
+## ZKLogin {/* {#zklogin} */}
 
-## Examples
+### 1.Send Sms Code {/* {#send_sms_code} */}
+
+```rust
+use onechain_wallet_rust_sdk::client::OneChainWalletService;
+use onechain_wallet_rust_sdk::rpc::DIDApi;
+use onechain_wallet_rust_sdk::types::did::SmsCodeSendReq;
+
+async fn send_sms_code(service: &OneChainWalletService) -> anyhow::Result<String> {
+    let req = SmsCodeSendReq {
+        mobile: "123123123".to_string(),
+        mobile_prefix: "855".to_string(),
+        provider: "huione".to_string(),
+    };
+
+    // get sms code
+    let sms_code = service.send_code(req).await?.get_data()?;
+    Ok(sms_code)
+}
+
+```
+
+### 2.Get Sms Auth Number {/* {#get_sms_auth_number} */}
+
+```rust
+use onechain_wallet_rust_sdk::client::OneChainWalletService;
+use onechain_wallet_rust_sdk::rpc::DIDApi;
+use onechain_wallet_rust_sdk::types::did::SmsAuthenticateReq;
+
+async fn sms_auth(service: &OneChainWalletService, sms_code: String) -> anyhow::Result<String> {
+    let req = SmsAuthenticateReq {
+        mobile_prefix: "855".to_string(),
+        mobile: "123123123".to_string(),
+        provider: "huione".to_string(),
+        sms_code: "000000".to_string(),
+        code: sms_code,
+    };
+    let rsp = service.sms(req).await?.get_data()?;
+    Ok(rsp.code)
+}
+
+```
+
+### 3.Get Zk JWT Token {/* {#get_zk_jwt_token} */}
+
+```rust
+use onechain_wallet_rust_sdk::client::OneChainWalletService;
+use onechain_wallet_rust_sdk::fastcrypto::ed25519::Ed25519KeyPair;
+use onechain_wallet_rust_sdk::fastcrypto::traits::KeyPair;
+use onechain_wallet_rust_sdk::fastcrypto_zkp::bn254::utils::get_nonce;
+use onechain_wallet_rust_sdk::rpc::DIDApi;
+use onechain_wallet_rust_sdk::sui_types::crypto::SuiKeyPair;
+use onechain_wallet_rust_sdk::types::common::ACCESS_TOKEN;
+use onechain_wallet_rust_sdk::types::did::{AuthorizeTokenProfileReq, AuthorizeTokenProfileResp};
+use rand::{random, thread_rng};
+use sui_sdk::SuiClient;
+
+async fn get_jwt_token(
+    sui_client: &SuiClient,
+    service: &mut OneChainWalletService,
+    auth_number: String,
+) -> anyhow::Result<(SuiKeyPair, String, AuthorizeTokenProfileResp)> {
+    let summary = sui_client
+        .governance_api()
+        .get_latest_sui_system_state()
+        .await?;
+
+    let max_epoch = 30 + summary.epoch;
+    let skp = SuiKeyPair::Ed25519(Ed25519KeyPair::generate(&mut thread_rng()));
+    let jwt_randomness = random::<i128>().abs().to_string();
+    let eph_pk_bytes = skp.to_bytes();
+    let nonce = get_nonce(&eph_pk_bytes, max_epoch, &jwt_randomness)?;
+
+    let req = AuthorizeTokenProfileReq {
+        provider: "huione".to_string(),
+        code: auth_number,
+        login_type: "sms".to_string(),
+        nonce: nonce.clone(),
+    };
+    let rsp = service.get_token(req).await?.get_data()?;
+    // set token header
+    service.set_header(ACCESS_TOKEN.to_string(), rsp.access_token.clone());
+
+    Ok((skp, nonce, rsp))
+}
+```
+
+### 4.Get ZK Proof {/* {#get_zk_proof} */}
+
+```rust
+use fastcrypto_zkp::bn254::zk_login::ZkLoginInputsReader;
+use num_bigint::BigUint;
+use onechain_wallet_rust_sdk::client::OneChainWalletService;
+use onechain_wallet_rust_sdk::rpc::DIDApi;
+use onechain_wallet_rust_sdk::types::did::{AuthorizeTokenProfileResp, ZkProofsReq};
+use sui_types::crypto::SuiKeyPair;
+
+async fn get_zk_proof(
+    service: &OneChainWalletService,
+    max_epoch: i64,
+    jwt_randomness: String,
+    skp: &SuiKeyPair,
+    jwt_token_rsp: &AuthorizeTokenProfileResp,
+) -> anyhow::Result<ZkLoginInputsReader> {
+    let extended_ephemeral_public_key = BigUint::from_bytes_be(&skp.to_bytes()).to_string();
+
+    let req = ZkProofsReq {
+        max_epoch,
+        jwt_randomness,
+        extended_ephemeral_public_key,
+        jwt: jwt_token_rsp.jwt_token.clone(),
+        salt: jwt_token_rsp.salt.clone(),
+        key_claim_name: "sub".to_string(),
+    };
+    let reader = service.get_zk_proofs(req).await?.get_data()?;
+    Ok(reader)
+}
+
+```
+
+### 5.Refresh JWT Token {/* {#refresh_jwt_token} */}
+
+**Prerequisites**
+
+```rust
+// set token header
+service.set_header(ACCESS_TOKEN.to_string(), rsp.access_token.clone());
+```
+
+```rust
+use onechain_wallet_rust_sdk::client::OneChainWalletService;
+use onechain_wallet_rust_sdk::rpc::DIDApi;
+use onechain_wallet_rust_sdk::types::did::{AuthorizeTokenProfileResp, RefreshJwtTokenReq};
+
+async fn refresh_jwt_token(
+    service: &OneChainWalletService,
+    nonce: String,
+) -> anyhow::Result<AuthorizeTokenProfileResp> {
+    let req = RefreshJwtTokenReq { nonce };
+    let resp = service.refresh_jwt_token(req).await?.get_data()?;
+    Ok(resp)
+}
+
+```
+
+## Build Transfer Tx {/* {#build-transfer-tx} */}
+
+### 1.Create Transfer tx {/* {#create_transfer_tx} */}
+
+```rust
+use onechain_wallet_rust_sdk::client::OneChainWalletService;
+use onechain_wallet_rust_sdk::rpc::TransferApi;
+use onechain_wallet_rust_sdk::types::common::CreateOrderResp;
+use onechain_wallet_rust_sdk::types::transfer::TransferOrderReq;
+
+async fn create_tx(
+    service: &OneChainWalletService,
+    from_address: String,
+    to_address: String,
+) -> anyhow::Result<CreateOrderResp> {
+    let req = TransferOrderReq {
+        from_address,
+        to_address,
+        coin_type: "OCT".to_string(),
+        amount: 0.001.to_string(),
+        remark: None,
+    };
+
+    let resp = service.create_order(req).await?.get_data()?;
+
+    Ok(resp)
+}
+```
+
+### 2.Sign Tx & Send Tx {/* {#sign_and_send_tx} */}
+
+```rust
+use fastcrypto_zkp::bn254::zk_login::ZkLoginInputs;
+use onechain_wallet_rust_sdk::client::OneChainWalletService;
+use onechain_wallet_rust_sdk::rpc::TransferApi;
+use onechain_wallet_rust_sdk::types::common::CreateOrderResp;
+use onechain_wallet_rust_sdk::types::transfer::{TransferOrderTxReq, TransferOrderTxResponse};
+use onechain_wallet_rust_sdk::utils::zk_login::zklogin_sign_tx_bytes;
+use sui_types::crypto::SuiKeyPair;
+
+async fn send_tx(
+    service: &OneChainWalletService,
+    tx_order: CreateOrderResp,
+    keypair: &SuiKeyPair,
+    max_epoch: u64,
+    zk_login_inputs: ZkLoginInputs,
+) -> anyhow::Result<TransferOrderTxResponse> {
+    let user_sign = zklogin_sign_tx_bytes(
+        max_epoch,
+        keypair,
+        zk_login_inputs,
+        tx_order.raw_transaction.clone(),
+    )?;
+
+    let req = TransferOrderTxReq {
+        hash: tx_order.hash,
+        tx_bytes: tx_order.raw_transaction,
+        user_sig: user_sign,
+    };
+
+    let tx_resp = service.send_tx(req).await?.get_data()?;
+    Ok(tx_resp)
+}
+```
+
+## Build Sponsor Tx {/* {#build-sponsor-tx} */}
+
+### 1.Build Sponsor Ptb Tx Base64 {/* {#build_sponsor_ptb_tx_base64} */}
+
+```rust
+use fastcrypto::encoding::{Base64, Encoding};
+use sui_sdk::SuiClient;
+use sui_sdk::rpc_types::SuiObjectDataOptions;
+use sui_types::base_types::SuiAddress;
+use sui_types::programmable_transaction_builder::ProgrammableTransactionBuilder;
+use sui_types::transaction::TransactionData;
+
+async fn build_ptb_tx_base64(sui_client: &SuiClient, from: SuiAddress) -> anyhow::Result<String> {
+    let coins = sui_client
+        .coin_read_api()
+        .get_coins(from, Some("0x2::oct::OCT".to_string()), None, None)
+        .await?;
+
+    let object = sui_client
+        .read_api()
+        .get_object_with_options(coins.data[0].coin_object_id, SuiObjectDataOptions::new())
+        .await?
+        .data
+        .unwrap();
+
+    let pt = {
+        let mut builder = ProgrammableTransactionBuilder::new();
+        builder.transfer_object(from, object.object_ref()).unwrap();
+        builder.finish()
+    };
+    let data = TransactionData::new_programmable(from, vec![], pt, 100000000, 1000);
+    Ok(Base64::encode(&bcs::to_bytes(&data)?))
+}
+```
+
+### 2.Create Sponsor tx {/* {#create_sponsor_tx} */}
+
+```rust
+use onechain_wallet_rust_sdk::client::OneChainWalletService;
+use onechain_wallet_rust_sdk::rpc::TransferApi;
+use onechain_wallet_rust_sdk::types::transfer::{BuildSponsorTxReq, GasTxBuilderResponse};
+
+async fn create_sponsor_tx(
+    service: &OneChainWalletService,
+    wallet_address: String,
+    tx_base64: String,
+) -> anyhow::Result<GasTxBuilderResponse> {
+    let req = BuildSponsorTxReq {
+        address: wallet_address,
+        raw_transaction: tx_base64,
+        only_transaction_kind: false,
+        gas_budget: Some(0.01.to_string()),
+    };
+
+    let resp = service.build_sponsor_tx(req).await?.get_data()?;
+
+    Ok(resp)
+}
+```
+
+### 3.Sign Tx && Send Tx {/* {#sign_sponsor_tx_and_send_tx} */}
+
+```rust
+use fastcrypto_zkp::bn254::zk_login::ZkLoginInputs;
+use onechain_wallet_rust_sdk::client::OneChainWalletService;
+use onechain_wallet_rust_sdk::rpc::TransferApi;
+use onechain_wallet_rust_sdk::types::transfer::{
+    GasTxBuilderResponse, ProxyPayTxReq, ProxyPayTxResp,
+};
+use onechain_wallet_rust_sdk::utils::zk_login::zklogin_sign_tx_bytes;
+use sui_types::crypto::SuiKeyPair;
+
+async fn sign_sponsor_tx_and_send_tx(
+    service: &OneChainWalletService,
+    sponsor_order: GasTxBuilderResponse,
+    keypair: &SuiKeyPair,
+    max_epoch: u64,
+    zk_login_inputs: ZkLoginInputs,
+) -> anyhow::Result<ProxyPayTxResp> {
+    let user_sign = zklogin_sign_tx_bytes(
+        max_epoch,
+        keypair,
+        zk_login_inputs,
+        sponsor_order.raw_transaction.clone(),
+    )?;
+
+    let req = ProxyPayTxReq {
+        user_sig: user_sign,
+        tx_bytes: sponsor_order.raw_transaction,
+        reservation_id: sponsor_order.reservation_id,
+    };
+
+    let resp = service.do_proxy_pay_tx(req).await?.get_data()?;
+    Ok(resp)
+}
+```
 

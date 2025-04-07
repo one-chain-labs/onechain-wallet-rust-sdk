@@ -174,7 +174,7 @@ pub trait DIDApi: Call {
     /// Returns a new JWT Token and user information
     async fn refresh_jwt_token(
         &self,
-        request: AuthorizeRefreshJwtTokenReq,
+        request: RefreshJwtTokenReq,
     ) -> Result<CommonResp<AuthorizeTokenProfileResp>> {
         self.call(
             CallMethod::Post,
@@ -189,20 +189,14 @@ pub trait DIDApi: Call {
     ///
     /// Retrieve detailed information about the current user based on the JWT Token.
     ///
-    /// # Parameters
-    /// * `request` - Token query request
-    ///
     /// # Return value
     /// Returns detailed user information, including user ID, nickname, avatar, etc.
-    async fn get_token_user_profile(
-        &self,
-        request: AuthorizeTokenReq,
-    ) -> Result<CommonResp<UserTokenProfile>> {
+    async fn get_token_user_profile(&self) -> Result<CommonResp<UserTokenProfile>> {
         self.call(
             CallMethod::Post,
             format!("{}/getTokenUserProfile", Self::BASE_PATH),
             None,
-            Some(request),
+            None,
         )
         .await
     }

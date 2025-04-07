@@ -16,13 +16,6 @@ pub struct AuthorizeTokenProfileReq {
     pub login_type: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct AuthorizeTokenReq {
-    /// Unique token identifier
-    pub access_token: String,
-}
-
 /// Mobile phone authorization request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -160,17 +153,8 @@ pub struct ZkProofsReq {
 /// Refresh token request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct AuthorizeRefreshJwtTokenReq {
-    /// User DID
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub did: Option<String>,
-    /// User address
-    pub address: String,
+pub struct RefreshJwtTokenReq {
     /// Random string
     /// Required field, cannot be empty
     pub nonce: String,
-    /// Authentication client type, default is huione
-    pub provider: String,
-    /// Wallet type, default is merchant ID
-    pub wallet_type: String,
 }
