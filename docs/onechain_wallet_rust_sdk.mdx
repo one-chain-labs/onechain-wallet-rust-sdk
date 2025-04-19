@@ -15,7 +15,7 @@ num-bigint = "0.4.4"
 
 ## ZKLogin {/* {#zklogin} */}
 
-### 1.Send Sms Code {/* {#send_sms_code} */}
+### 1.Send Sms Code {/* {#send-sms-code} */}
 
 ```rust
 use onechain_wallet_rust_sdk::client::OneChainWalletService;
@@ -36,7 +36,7 @@ async fn send_sms_code(service: &OneChainWalletService) -> anyhow::Result<String
 
 ```
 
-### 2.Get Sms Auth Number {/* {#get_sms_auth_number} */}
+### 2.Get Sms Auth Number {/* {#get-sms-auth-number} */}
 
 ```rust
 use onechain_wallet_rust_sdk::client::OneChainWalletService;
@@ -57,7 +57,7 @@ async fn sms_auth(service: &OneChainWalletService, sms_code: String) -> anyhow::
 
 ```
 
-### 3.Get Zk JWT Token {/* {#get_zk_jwt_token} */}
+### 3.Get Zk JWT Token {/* {#get-zk-jwt-token} */}
 
 ```rust
 use onechain_wallet_rust_sdk::client::OneChainWalletService;
@@ -101,7 +101,7 @@ async fn get_jwt_token(
 }
 ```
 
-### 4.Get ZK Proof {/* {#get_zk_proof} */}
+### 4.Get ZK Proof {/* {#get-zk-proof} */}
 
 ```rust
 use onechain_wallet_rust_sdk::fastcrypto_zkp::bn254::zk_login::ZkLoginInputsReader;
@@ -134,7 +134,7 @@ async fn get_zk_proof(
 
 ```
 
-### 5.Refresh JWT Token {/* {#refresh_jwt_token} */}
+### 5.Refresh JWT Token {/* {#refresh-jwt-token} */}
 
 **Prerequisites**
 
@@ -161,7 +161,7 @@ async fn refresh_jwt_token(
 
 ## Build Transfer Tx {/* {#build-transfer-tx} */}
 
-### 1.Create Transfer tx {/* {#create_transfer_tx} */}
+### 1.Create Transfer tx {/* {#create-transfer-tx} */}
 
 ```rust
 use onechain_wallet_rust_sdk::client::OneChainWalletService;
@@ -188,7 +188,7 @@ async fn create_tx(
 }
 ```
 
-### 2.Sign Tx & Send Tx {/* {#sign_and_send_tx} */}
+### 2.Sign Tx & Send Tx {/* {#sign-and-send-tx} */}
 
 ```rust
 use onechain_wallet_rust_sdk::fastcrypto_zkp::bn254::zk_login::ZkLoginInputs;
@@ -226,7 +226,7 @@ async fn send_tx(
 
 ## Build Sponsor Tx {/* {#build-sponsor-tx} */}
 
-### 1.Build Sponsor Ptb Tx Base64 {/* {#build_sponsor_ptb_tx_base64} */}
+### 1.Build Sponsor Ptb Tx Base64 {/* {#build-sponsor-ptb-tx-base64} */}
 
 ```rust
 use onechain_wallet_rust_sdk::fastcrypto::encoding::{Base64, Encoding};
@@ -259,7 +259,7 @@ async fn build_ptb_tx_base64(sui_client: &SuiClient, from: SuiAddress) -> anyhow
 }
 ```
 
-### 2.Create Sponsor tx {/* {#create_sponsor_tx} */}
+### 2.Create Sponsor tx {/* {#create-sponsor-tx} */}
 
 ```rust
 use onechain_wallet_rust_sdk::client::OneChainWalletService;
@@ -284,7 +284,7 @@ async fn create_sponsor_tx(
 }
 ```
 
-### 3.Sign Tx && Send Tx {/* {#sign_sponsor_tx_and_send_tx} */}
+### 3.Sign Tx && Send Tx {/* {#sign-sponsor-tx-and-send-tx} */}
 
 ```rust
 use onechain_wallet_rust_sdk::fastcrypto_zkp::bn254::zk_login::ZkLoginInputs;
